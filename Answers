@@ -1,0 +1,90 @@
+// 1. Explain what the simple List component does.
+
+The simple List component is a React component that displays a list of items. It consists of two sub-components: WrappedSingleListItem and WrappedListComponent.
+
+WrappedSingleListItem is a simple functional component that renders a single item in the list. It accepts four props: index, isSelected, onClickHandler, and text.
+
+WrappedListComponent is a functional component that renders the list. It accepts one prop: items. It uses useState hook to keep track of the selected index, 
+and useEffect hook to reset the selected index whenever the items prop changes. 
+The handleClick function is called when an item is clicked, and it updates the selected index.
+
+// 2. What problems / warnings are there with code?
+
+(a) The propTypes definition for items prop in WrappedListComponent is incorrect, it should be PropTypes.arrayOf(PropTypes.shape({
+text: PropTypes.string.isRequired,
+}))
+
+(b) The isSelected prop in WrappedSingleListItem should be a boolean indicating whether the current item is selected or not, 
+but it is currently passed the selectedIndex state value which is a number.
+
+(c) The onClickHandler function in WrappedSingleListItem is being called immediately instead of being passed as a callback.
+
+// 3. Please fix, optimize, and/or modify the component as much as you think is necessary.
+
+import React, { useState, useEffect, memo, useCallback } from 'react';
+import PropTypes from 'prop-types';
+
+// Single List Item
+const SingleListItem = memo(({ index, isSelected, onClickHandler, text }) => {
+const handleClick = useCallback(() => {
+onClickHandler(index);
+}, [onClickHandler, index]);
+
+return (
+<li
+style={{ backgroundColor: isSelected ? 'green' : 'red' }}
+onClick={handleClick}
+>
+{text}
+</li>
+);
+});
+
+SingleListItem.propTypes = {
+index: PropTypes.number,
+isSelected: PropTypes.bool,
+onClickHandler: PropTypes.func.isRequired,
+text: PropTypes.string.isRequired,
+};
+
+// List Component
+const List = memo(({ items }) => {
+const [selectedIndex, setSelectedIndex] = useState(null);
+
+useEffect(() => {
+setSelectedIndex(null);
+}, [items]);
+
+const handleClick = useCallback((index) => {
+setSelectedIndex(index);
+}, []);
+
+return (
+<ul style={{ textAlign: 'left' }}>
+{items &&
+items.map((item, index) => (
+<SingleListItem
+key={index}
+onClickHandler={handleClick}
+text={item.text}
+index={index}
+isSelected={index === selectedIndex}
+/>
+))}
+</ul>
+);
+});
+
+List.propTypes = {
+items: PropTypes.arrayOf(
+PropTypes.shape({
+text: PropTypes.string,
+})
+),
+};
+
+List.defaultProps = {
+items: null,
+};
+
+export default List;
